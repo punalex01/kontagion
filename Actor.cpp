@@ -45,6 +45,21 @@ void Living::addHealth(int health)
     m_health += health;
 }
 
+NonLiving::NonLiving(int imageID, double startX, double startY, Direction dir, int depth, double size, StudentWorld* world)
+: Actor(imageID, startX, startY, dir, depth, size, world)
+{
+    m_alive = true;
+}
+
+NonLiving::~NonLiving()
+{
+}
+
+bool NonLiving::isDead() const
+{
+    return !m_alive;
+}
+
 Socrates::Socrates(StudentWorld* world)
 : Living(IID_PLAYER, 0, 128, 0, 0, 1, 100, world)
 {
@@ -88,4 +103,18 @@ void Socrates::moveSocrates(string direction)
         m_positionalAngle -= 5 * (M_PI / 180);
         moveTo(128*(cos(m_positionalAngle))+128, 128*(sin(m_positionalAngle))+128);
     }
+}
+
+Dirt::Dirt(double startX, double startY, StudentWorld* world)
+: NonLiving(IID_DIRT, startX, startY, 0, 1, 1, world)
+{
+}
+
+Dirt::~Dirt()
+{
+}
+
+void Dirt::doSomething()
+{
+    return;
 }

@@ -12,8 +12,11 @@ class Actor : public GraphObject
 public:
     Actor(int imageID, double startX, double startY, Direction dir, int depth, double size, StudentWorld* world);
     virtual ~Actor();
+    virtual bool isDead() const = 0;                  // check if dead
     virtual void doSomething() = 0;
     StudentWorld* getWorld() const;
+    
+    //virtual bool checkOverlap() = 0;
 private:
     StudentWorld* m_world;              // might move to just Socrates
 };
@@ -23,7 +26,7 @@ class Living : public Actor
 public:
     Living(int imageID, double startX, double startY, Direction dir, int depth, double size, int health, StudentWorld* world);
     virtual ~Living();
-    bool isDead() const;                  // check if dead
+    virtual bool isDead() const;                  // check if dead
     int getHealth() const;
     void addHealth(int health);
     
@@ -34,8 +37,13 @@ private:
 class NonLiving : public Actor
 {
 public:
-    NonLiving(int imageID, double startX, double startY, Direction dir, int depth, double size);
+    NonLiving(int imageID, double startX, double startY, Direction dir, int depth, double size, StudentWorld* world);
     virtual ~NonLiving();
+    virtual bool isDead() const;
+    void makeDead();          // for collision
+    
+private:
+    bool m_alive;
 };
 
 class Socrates : public Living
@@ -47,14 +55,18 @@ public:
     
 private:
     double m_positionalAngle;
-
+    
     void moveSocrates(std::string direction);
 };
 
 class Dirt : public NonLiving
 {
 public:
-    Dirt();
+    Dirt(double startX, double startY, StudentWorld* world);
+    virtual ~Dirt();
+    virtual void doSomething();
+    
+private:
 };
 
 

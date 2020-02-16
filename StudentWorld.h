@@ -10,6 +10,7 @@
 
 class Actor;
 class Socrates;
+class Dirt;
 
 class StudentWorld : public GameWorld
 {
@@ -20,9 +21,14 @@ public:
     virtual void cleanUp();
 
 private:
+    int m_level;
     Socrates* player;
+    Dirt* testDirt;
+    
     std::vector<Actor*> m_actors;
     std::map<std::string, int> m_numActors;
+    
+    void addDirt();
 };
 
 #endif // STUDENTWORLD_H_
