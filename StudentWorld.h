@@ -16,12 +16,13 @@ class StudentWorld : public GameWorld
 {
 public:
     StudentWorld(std::string assetPath);
+    virtual ~StudentWorld();
     virtual int init();
     virtual int move();
     virtual void cleanUp();
+    virtual void decrementActors(std::string actorType);
 
 private:
-    int m_level;
     Socrates* player;
     Dirt* testDirt;
     

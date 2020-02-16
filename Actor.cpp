@@ -112,6 +112,7 @@ Dirt::Dirt(double startX, double startY, StudentWorld* world)
 
 Dirt::~Dirt()
 {
+    getWorld()->decrementActors("Dirt");
 }
 
 void Dirt::doSomething()
