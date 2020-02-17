@@ -18,13 +18,13 @@ StudentWorld::StudentWorld(string assetPath)
 : GameWorld(assetPath)
 {
     m_numActors["Dirt"] = 0;
+    m_numActors["Spray"] = 0;
     player = nullptr;
 }
 
 StudentWorld::~StudentWorld()
 {
     cleanUp();
-    cout << m_numActors["Dirt"];
 }
 
 int StudentWorld::init()
@@ -39,13 +39,18 @@ int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter.
     // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+    
+    callDoSomething();
+    
+    setGameStatText("Score: 004500 Level: " + to_string(getLevel()) + " Lives: " + to_string(getLives()) + " health: " + to_string(player->getHealth()) + " Sprays: " + to_string(player->numSpray())+" Flames: 4");
+    
+    checkCollision();
+    checkDead();
     if (player->isDead())
     {
         decLives();
         return GWSTATUS_PLAYER_DIED;
     }
-    player->doSomething();
-    setGameStatText("Score: 004500 Level: " + to_string(getLevel()) + " Lives: 3 health: 82 Sprays: 16 Flames: 4");
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -61,6 +66,71 @@ void StudentWorld::cleanUp()
         delete player;
 }
 
+void StudentWorld::addSpray(double startX, double startY, int dir)
+{
+    m_actors.push_back(new Spray(startX, startY, dir, this));
+    m_numActors["Spray"] += 1;
+}
+
+std::vector<Actor*> StudentWorld::actorVector() const
+{
+    return m_actors;
+}
+
+int StudentWorld::numActors(string actorType)
+{
+    return m_numActors[actorType];
+}
+
+void StudentWorld::decrementActors(string actorType)
+{
+    m_numActors[actorType] -= 1;
+}
+
+void StudentWorld::callDoSomething()
+{
+    vector<Actor*>::iterator it = m_actors.begin();
+    for (;it != m_actors.end(); it++)
+    {
+        (*it)->doSomething();
+    }
+    player->doSomething();
+}
+
+void StudentWorld::checkCollision()
+{
+    if (m_actors.size() == 0)
+        return;
+    vector<Actor*>::iterator it = m_actors.begin();
+    for (; it != m_actors.end();)
+    {
+        if ((*it)->didCollide())
+        {
+            if ((*it)->getActorType() == "Dirt" || (*it)->getActorType() == "Spray")
+                (*it)->makeDead();
+        }
+        it++;
+    }
+}
+
+void StudentWorld::checkDead()
+{
+    vector<Actor*>::iterator it = m_actors.begin();
+    for (;it != m_actors.end();)
+    {
+        if ((*it)->isDead())
+        {
+            m_numActors[(*it)->getActorType()] -= 1;
+            delete *it;
+            it = m_actors.erase(it);
+            cout << m_numActors["Dirt"] << " YES" << endl;
+            cout << m_actors.size() << " NO" << endl;
+        }
+        else
+            it++;
+    }
+}
+
 void StudentWorld::addDirt()
 {
     int startPositionalAngle, startRadius;                  // degrees
@@ -69,15 +139,10 @@ void StudentWorld::addDirt()
     {
         startPositionalAngle = randInt(0, 360);
         startRadius = randInt(0, 120);
-        startX = (startRadius * cos(startPositionalAngle * (M_PI/180)) + 128); // switch to polar
-        startY = (startRadius * sin(startPositionalAngle * (M_PI/180)) + 128);
+        startX = (startRadius * cos(startPositionalAngle * (M_PI/180)) + VIEW_RADIUS); // switch to polar
+        startY = (startRadius * sin(startPositionalAngle * (M_PI/180)) + VIEW_RADIUS);
         
         m_actors.push_back(new Dirt(startX, startY, this));
         m_numActors["Dirt"] += 1;
     }
-}
-
-void StudentWorld::decrementActors(string actorType)
-{
-    m_numActors[actorType] -= 1;
 }

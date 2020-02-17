@@ -11,6 +11,7 @@
 class Actor;
 class Socrates;
 class Dirt;
+class Spray;
 
 class StudentWorld : public GameWorld
 {
@@ -20,15 +21,22 @@ public:
     virtual int init();
     virtual int move();
     virtual void cleanUp();
-    virtual void decrementActors(std::string actorType);
+    
+    std::vector<Actor*> actorVector() const;
+    int numActors(std::string actorType); // returns num of specific actor
+    void decrementActors(std::string actorType);
+    
+    void addSpray(double startX, double startY, int dir);
 
 private:
     Socrates* player;
-    Dirt* testDirt;
     
     std::vector<Actor*> m_actors;
     std::map<std::string, int> m_numActors;
     
+    void checkCollision();
+    void checkDead();       // check which actors are dead and removes them
+    void callDoSomething(); // calls doSomething() for all actors;
     void addDirt();
 };
 
