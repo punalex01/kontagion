@@ -133,7 +133,7 @@ public:
 class Goodie : public NonLiving
 {
 public:
-    Goodie(int imageID, double startX, double startY, Direction dir, int depth, int size, StudentWorld* world, int goodieSound, int goodieScore);
+    Goodie(int imageID, double startX, double startY, StudentWorld* world, int goodieSound, int goodieScore);
     virtual ~Goodie();
     virtual void doSomething();
     virtual bool isWeapon() const;
@@ -156,5 +156,16 @@ public:
     
     virtual std::string getActorType() const;
 };
+
+class Fungus : public Goodie
+{
+public:
+    Fungus(double startX, double startY, StudentWorld* world);
+    virtual ~Fungus();
+    virtual void goodieAction();
+    
+    virtual std::string getActorType() const;
+};
+
 
 #endif // ACTOR_H_

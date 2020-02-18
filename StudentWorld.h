@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sstream>
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
@@ -13,6 +14,7 @@ class Socrates;
 class Dirt;
 class Spray;
 class FlameGoodie;
+class Fungus;
 
 class StudentWorld : public GameWorld
 {
@@ -36,12 +38,13 @@ private:
     
     std::vector<Actor*> m_actors;
     std::map<std::string, int> m_numActors;
-    FlameGoodie* test;
     
     void checkCollision();
     void checkDead();       // check which actors are dead and removes them
     void callDoSomething(); // calls doSomething() for all actors;
     void addDirt();
+    void addGoodies();
+    std::string displayString();
 };
 
 #endif // STUDENTWORLD_H_

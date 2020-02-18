@@ -55,7 +55,7 @@ bool Actor::didCollide()
 
 bool Actor::isDamageable() const
 {
-    if (getActorType() == "Dirt" || getActorType() == "Spray" || getActorType() == "Flame")
+    if (getActorType() == "Dirt" || getActorType() == "Spray" || getActorType() == "Flame" || getActorType() == "Flame Goodie" || getActorType() == "Fungus")
         return true;
     return false;
 }
@@ -72,7 +72,7 @@ Living::~Living()
 
 bool Living::isDead() const
 {
-    return m_health == 0;
+    return m_health <= 0;
 }
 
 int Living::getHealth() const
@@ -331,8 +331,8 @@ string Flame::getActorType() const
     return "Flame";
 }
 
-Goodie::Goodie(int imageID, double startX, double startY, Direction dir, int depth, int size, StudentWorld* world, int goodieSound, int goodieScore)
-: NonLiving(imageID, startX, startY, dir, depth, size, world)
+Goodie::Goodie(int imageID, double startX, double startY, StudentWorld* world, int goodieSound, int goodieScore)
+: NonLiving(imageID, startX, startY, 0, 1, 1, world)
 {
     m_ticksAlive = 0;
     m_ticksAllowed = max(rand() % (300 - 10 * getWorld()->getLevel()), 50);
@@ -346,6 +346,8 @@ Goodie::~Goodie()
 
 void Goodie::doSomething()
 {
+    if (m_ticksAlive >= m_ticksAllowed)
+        makeDead();
     if (isDead())
         return;
     if (getDistance(getX(), getY(), getWorld()->getPlayer()->getX(), getWorld()->getPlayer()->getY()) <= 8)
@@ -354,8 +356,6 @@ void Goodie::doSomething()
         return;
     }
     m_ticksAlive++;
-    if (m_ticksAlive >= m_ticksAllowed)
-        makeDead();
 }
 
 void Goodie::onContact()
@@ -371,8 +371,27 @@ bool Goodie::isWeapon() const
     return false;
 }
 
+Fungus::Fungus(double startX, double startY, StudentWorld* world)
+: Goodie(IID_FUNGUS, startX, startY, world, SOUND_NONE, -50)
+{
+}
+
+Fungus::~Fungus()
+{
+}
+
+string Fungus::getActorType() const
+{
+    return "Fungus";
+}
+
+void Fungus::goodieAction()
+{
+    getWorld()->getPlayer()->addHealth(-20);
+}
+
 FlameGoodie::FlameGoodie(double startX, double startY, StudentWorld* world)
-: Goodie(IID_FLAME_THROWER_GOODIE, startX, startY, 0, 1, 1, world, SOUND_GOT_GOODIE, 300)
+: Goodie(IID_FLAME_THROWER_GOODIE, startX, startY, world, SOUND_GOT_GOODIE, 300)
 {
 }
 

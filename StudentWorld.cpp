@@ -5,6 +5,10 @@
 
 #include <string>
 #include <iterator>
+#include <cmath>
+#include <iostream> // defines the overloads of the << operator
+#include <sstream>  // defines the type std::ostringstream
+#include <iomanip>  // defines the manipulator setw
 using namespace std;
 
 GameWorld* createStudentWorld(string assetPath)
@@ -17,12 +21,7 @@ GameWorld* createStudentWorld(string assetPath)
 StudentWorld::StudentWorld(string assetPath)
 : GameWorld(assetPath)
 {
-    m_numActors["Dirt"] = 0;
-    m_numActors["Spray"] = 0;
-    m_numActors["Flame"] = 0;
-    m_numActors["Flame Goodie"] = 0;
     player = nullptr;
-    test = new FlameGoodie(128, 0, this);
     
 }
 
@@ -33,9 +32,14 @@ StudentWorld::~StudentWorld()
 
 int StudentWorld::init()
 {
+    m_numActors["Dirt"] = 0;
+    m_numActors["Spray"] = 0;
+    m_numActors["Flame"] = 0;
+    m_numActors["Flame Goodie"] = 0;
+    m_numActors["Fungus"] = 0;
+    
     player = new Socrates(this);
     addDirt();
-    m_actors.push_back(test);
     
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -44,10 +48,12 @@ int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter.
     // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+    addGoodies();
     checkCollision();
     callDoSomething();
     
-    setGameStatText("Score: 004500 Level: " + to_string(getLevel()) + " Lives: " + to_string(getLives()) + " health: " + to_string(player->getHealth()) + " Sprays: " + to_string(player->numSpray())+" Flames: " + to_string(player->numFlame()));
+
+    setGameStatText(displayString());
     
     checkDead();
     if (player->isDead())
@@ -66,6 +72,7 @@ void StudentWorld::cleanUp()
         delete *it;
         it = m_actors.erase(it);
     }
+
     if (player != nullptr)
         delete player;
 }
@@ -163,4 +170,53 @@ void StudentWorld::addDirt()
         m_actors.push_back(new Dirt(startX, startY, this));
         m_numActors["Dirt"] += 1;
     }
+}
+
+void StudentWorld::addGoodies()
+{
+    int chanceFungus = randInt(0, max(510 - getLevel()*10, 200));
+    if (chanceFungus == 0)
+    {
+        int randAngle = randInt(1, 360);
+        double startX, startY;
+        startX = (128 * cos(randAngle * (M_PI/180)) + VIEW_RADIUS);
+        startY = (128 * sin(randAngle * (M_PI/180)) + VIEW_RADIUS);
+        
+        vector<Actor*>::iterator it = m_actors.begin();
+        advance(it, m_numActors["Dirt"] + m_numActors["Spray"] + m_numActors["Flame"] + m_numActors["Flame Goodie"]); 
+        m_actors.insert(it, new Fungus(startX, startY, this));
+        m_numActors["Fungus"] += 1;
+    }
+    
+    int chanceGoodie = max(510 - getLevel() * 10, 250);
+    if (randInt(0, chanceGoodie-1) == 0)
+    {
+        //int chooseGoodie = rand(1, 10);
+        //if (chooseGoodie <= 6)
+        int randAngle = randInt(1, 360);
+        double startX, startY;
+        startX = (128 * cos(randAngle * (M_PI/180)) + VIEW_RADIUS);
+        startY = (128 * sin(randAngle * (M_PI/180)) + VIEW_RADIUS);
+        
+        vector<Actor*>::iterator it = m_actors.begin();
+        advance(it, m_numActors["Dirt"] + m_numActors["Spray"] + m_numActors["Flame"]);
+        m_actors.insert(it, new FlameGoodie(startX, startY, this));
+        m_numActors["Flame Goodie"] += 1;
+    }
+}
+
+string StudentWorld::displayString()
+{
+    
+    ostringstream oss;
+    oss.setf(ios::fixed);
+    oss.precision(0);
+    oss << "Score: " << getScore() << " ";
+    oss << "Lives: " << getLives() << " ";
+    oss << "health: " << player->getHealth() << " ";
+    oss << "Sprays: " << player->numSpray() << " ";
+    oss << "Flames: " << player->numFlame();
+    
+    string getString = oss.str();
+    return getString;
 }
