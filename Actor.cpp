@@ -44,39 +44,19 @@ bool Actor::didCollide()
         {
             if (getDistance(getX(), getY(), getWorld()->actorVector()[i]->getX(), getWorld()->actorVector()[i]->getY()) <= 8)
             {
-                if (getWorld()->actorVector()[i]->getActorType() == "Dirt" || getWorld()->actorVector()[i]->getActorType() == "Spray")
+                if (getWorld()->actorVector()[i]->isDamageable())
                     getWorld()->actorVector()[i]->makeDead();
                 return true;
             }
         }
      }
-    /*int i = 0;
-    vector<Actor*>::iterator it = getWorld()->actorVector().begin();
-    if (getActorType() == "Dirt")
-    {
-        i = getWorld()->numActors("Dirt");
-        advance(it, i);
-    }
-    
-    for (; it != getWorld()->actorVector().end(); i++)         // for some reason, iterator goes past end
-    {
-        //cout << i << endl;
-        if (i >= getWorld()->actorVector().size())
-            break;
-         if (!isDead() && !(*it)->isDead() && (*it)->getActorType() != getActorType())
-        {
-            if (getDistance(getX(), getY(), (*it)->getX(), (*it)->getY()) <= 8)
-            {
-                if ((*it)->getActorType() == "Dirt" || (*it)->getActorType() == "Spray")
-                {
-                    cout << (*it)->getActorType() << endl;
-                    (*it)->makeDead();
-                }
-                return true;
-            }
-        }
-        it++;
-    }*/
+    return false;
+}
+
+bool Actor::isDamageable() const
+{
+    if (getActorType() == "Dirt" || getActorType() == "Spray" || getActorType() == "Flame")
+        return true;
     return false;
 }
 
@@ -110,6 +90,11 @@ void Living::makeDead()
     m_health = 0;
 }
 
+bool Living::isWeapon()
+{
+    return false;
+}
+
 NonLiving::NonLiving(int imageID, double startX, double startY, Direction dir, int depth, double size, StudentWorld* world)
 : Actor(imageID, startX, startY, dir, depth, size, world)
 {
@@ -135,6 +120,7 @@ Socrates::Socrates(StudentWorld* world)
 {
     m_positionalAngle = M_PI;
     m_numSpray = 20;
+    m_numFlame = 5;
 }
 
 Socrates::~Socrates()
@@ -152,10 +138,11 @@ void Socrates::doSomething()
         {
             case KEY_PRESS_SPACE:
                 if (m_numSpray > 0)
-                {
-                    getWorld()->playSound(SOUND_PLAYER_SPRAY);
                     useSpray();
-                }
+                break;
+            case KEY_PRESS_ENTER:
+                if (m_numFlame > 0)
+                    useFlame();
                 break;
             case KEY_PRESS_LEFT:
                 moveSocrates("left");
@@ -184,6 +171,11 @@ int Socrates::numSpray() const
     return m_numSpray;
 }
 
+int Socrates::numFlame() const
+{
+    return m_numFlame;
+}
+
 void Socrates::moveSocrates(string direction)
 {
     if (direction == "left")                // pressed left key
@@ -202,10 +194,33 @@ void Socrates::moveSocrates(string direction)
 
 void Socrates::useSpray()
 {
+    getWorld()->playSound(SOUND_PLAYER_SPRAY);
     double dx, dy;
     getPositionInThisDirection(getDirection(),  2*SPRITE_RADIUS, dx, dy);
     getWorld()->addSpray(dx, dy, getDirection());
     m_numSpray--;
+}
+
+void Socrates::useFlame()
+{
+    getWorld()->playSound(SOUND_PLAYER_FIRE);
+    double dx, dy;
+    for (int i = 0; i <= 15; i++)
+    {
+        getPositionInThisDirection(getDirection()+(22*i), 2*SPRITE_RADIUS, dx, dy);
+        getWorld()->addFlame(dx, dy, getDirection() + (22*i));
+    }
+    m_numFlame--;
+}
+
+bool Socrates::isWeapon() const
+{
+    return false;
+}
+
+void Socrates::addFiveFlame()
+{
+    m_numFlame += 5;
 }
 
 Dirt::Dirt(double startX, double startY, StudentWorld* world)
@@ -225,6 +240,11 @@ void Dirt::doSomething()
 string Dirt::getActorType() const
 {
     return "Dirt";
+}
+
+bool Dirt::isWeapon() const
+{
+    return false;
 }
 
 Weapon::Weapon(int imageID, double startX, double startY, Direction dir, int depth, double size, StudentWorld* world)
@@ -248,6 +268,25 @@ bool Weapon::finishedTraveling() const
     return maxDistanceAllowed() - distanceTraveled() <= 0;
 }
 
+void Weapon::doSomething()
+{
+    if (isDead())
+    {
+        return;
+    }
+    moveAngle(getDirection(), SPRITE_RADIUS*2);
+    
+    if (finishedTraveling())
+    {
+        makeDead();
+    }
+}
+
+bool Weapon::isWeapon() const
+{
+    return true;
+}
+
 Spray::Spray(double startX, double startY, Direction dir, StudentWorld* world)
 : Weapon(IID_SPRAY, startX, startY, dir, 1, 1, world)
 {
@@ -262,21 +301,94 @@ int Spray::maxDistanceAllowed() const
     return 112;
 }
 
-void Spray::doSomething()
-{
-    if (isDead())
-    {
-        return;
-    }
-    moveAngle(getDirection(), SPRITE_RADIUS*2);
-    
-    if (finishedTraveling())
-    {
-        makeDead();
-    }
-}
+//void Spray::doSomething()
+//{
+//}
 
 string Spray::getActorType() const
 {
     return "Spray";
 }
+
+Flame::Flame(double startX, double startY, Direction dir, StudentWorld* world)
+: Weapon(IID_FLAME, startX, startY, dir, 1, 1, world)
+{
+}
+
+Flame::~Flame()
+{
+}
+
+int Flame::maxDistanceAllowed() const
+{
+    return 32;
+}
+
+//void Flame::doSomething()
+
+string Flame::getActorType() const
+{
+    return "Flame";
+}
+
+Goodie::Goodie(int imageID, double startX, double startY, Direction dir, int depth, int size, StudentWorld* world, int goodieSound, int goodieScore)
+: NonLiving(imageID, startX, startY, dir, depth, size, world)
+{
+    m_ticksAlive = 0;
+    m_ticksAllowed = max(rand() % (300 - 10 * getWorld()->getLevel()), 50);
+    m_goodieSound = goodieSound;
+    m_goodieScore = goodieScore;
+}
+
+Goodie::~Goodie()
+{
+}
+
+void Goodie::doSomething()
+{
+    if (isDead())
+        return;
+    if (getDistance(getX(), getY(), getWorld()->getPlayer()->getX(), getWorld()->getPlayer()->getY()) <= 8)
+    {
+        onContact();
+        return;
+    }
+    m_ticksAlive++;
+    if (m_ticksAlive >= m_ticksAllowed)
+        makeDead();
+}
+
+void Goodie::onContact()
+{
+    getWorld()->increaseScore(m_goodieScore);
+    makeDead();
+    getWorld()->playSound(m_goodieSound);
+    goodieAction();
+}
+
+bool Goodie::isWeapon() const
+{
+    return false;
+}
+
+FlameGoodie::FlameGoodie(double startX, double startY, StudentWorld* world)
+: Goodie(IID_FLAME_THROWER_GOODIE, startX, startY, 0, 1, 1, world, SOUND_GOT_GOODIE, 300)
+{
+}
+
+FlameGoodie::~FlameGoodie()
+{
+}
+
+void FlameGoodie::goodieAction()
+{
+    getWorld()->getPlayer()->addFiveFlame();
+}
+
+string FlameGoodie::getActorType() const
+{
+    return "Flame Goodie";
+}
+
+
+

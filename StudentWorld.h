@@ -12,6 +12,7 @@ class Actor;
 class Socrates;
 class Dirt;
 class Spray;
+class FlameGoodie;
 
 class StudentWorld : public GameWorld
 {
@@ -25,14 +26,17 @@ public:
     std::vector<Actor*> actorVector() const;
     int numActors(std::string actorType); // returns num of specific actor
     void decrementActors(std::string actorType);
+    Socrates* getPlayer() const;
     
     void addSpray(double startX, double startY, int dir);
+    void addFlame(double startX, double startY, int dir);
 
 private:
     Socrates* player;
     
     std::vector<Actor*> m_actors;
     std::map<std::string, int> m_numActors;
+    FlameGoodie* test;
     
     void checkCollision();
     void checkDead();       // check which actors are dead and removes them
